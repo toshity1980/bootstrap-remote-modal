@@ -90,8 +90,9 @@
     }
 
     function remoteModal(event) {
-        if (event.target.dataset.bsToggle == 'remote-modal' && event.target.href) {
-            request(event.target.href, 'get', null, load)
+        const uri = event.target.href ? event.target.href : event.target.dataset.bsTarget
+        if (event.target.dataset.bsToggle == 'remote-modal' && uri) {
+            request(uri, 'get', null, load)
             event.preventDefault()
         }
     }
