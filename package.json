@@ -1,0 +1,14 @@
+{
+  "name": "bootstrap-remote-modal",
+  "version": "1.0.0",
+  "description": "Utility for Modal and Offcanvas display of remote content in bootstrap",
+  "author": "Toshimasa Matsuoka",
+  "contributors": [
+    "Entap, Inc."
+  ],
+  "main": "bootstrap-remote-modal.js",
+  "license": "MIT",
+  "devDependencies": {
+    "bootstrap": "^5.1.3"
+  }
+}
