@@ -1,10 +1,11 @@
-(function () {
+(function (bootstrap) {
     let _modal = null
     let _offcanvas = null
 
     function request(url, method, formData, onLoad) {
         const req = new XMLHttpRequest()
         req.responseType = 'document'
+        req.setRequestHeader('X-Referer', location.href)
         req.open(method, url)
         req.send(formData)
         req.addEventListener('load', () => onLoad(req), true)
@@ -90,4 +91,4 @@
         document.removeEventListener('click', remoteModal)
         document.addEventListener('click', remoteModal)
     })
-})()
+})(bootstrap)
