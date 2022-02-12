@@ -28,6 +28,8 @@
         if (body) {
             document.body.innerHTML = body.innerHTML
             document.dispatchEvent(new Event("DOMContentLoaded"))
+        } else {
+            alert("Error occurred\nHTTP Status Code is " + req.status)
         }
     }
 
