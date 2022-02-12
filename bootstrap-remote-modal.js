@@ -5,8 +5,8 @@
     function request(url, method, formData, onLoad) {
         const req = new XMLHttpRequest()
         req.responseType = 'document'
-        req.setRequestHeader('X-Referer', location.href)
         req.open(method, url)
+        req.setRequestHeader('X-Referer', location.href)
         req.send(formData)
         req.addEventListener('load', () => onLoad(req), true)
     }
@@ -36,12 +36,20 @@
     }
 
     function showModal(response) {
-        const elem = response.getElementsByClassName('modal')[0]
-        if (elem) {
+        let modalElem = response.getElementsByClassName('modal')[0]
+        if (!modalElem) {
+            const elem = response.getElementsByClassName('modal-dialog')[0]
+            if (elem) {
+                modalElem = document.createElement('div')
+                modalElem.classList.add('modal', 'fade')
+                modalElem.appendChild(elem)
+            }
+        }
+        if (modalElem) {
             if (_modal) {
-                _modal.innerHTML = elem.innerHTML
+                _modal.innerHTML = modalElem.innerHTML
             } else {
-                _modal = document.body.appendChild(elem)
+                _modal = document.body.appendChild(modalElem)
                 new bootstrap.Modal(_modal)
             }
             bootstrap.Modal.getInstance(_modal).show()
@@ -56,6 +64,7 @@
             if (_offcanvas) {
                 _offcanvas.innerHTML = elem.innerHTML
             } else {
+                elem.classList.remove('show')
                 _offcanvas = document.body.appendChild(elem)
                 new bootstrap.Offcanvas(_offcanvas)
             }
