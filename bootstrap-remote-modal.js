@@ -4,11 +4,19 @@
 
     function request(url, method, formData, onLoad) {
         const req = new XMLHttpRequest()
+        req.addEventListener('readystatechange', () => {
+            if (req.readyState === XMLHttpRequest.DONE) {
+                if (req.status == 0 || (200 <= req.status && req.status < 400)) {
+                    onLoad(req)
+                } else {
+                    showBody(req)
+                }
+            }
+        })
         req.responseType = 'document'
         req.open(method, url)
         req.setRequestHeader('X-Referer', location.href)
         req.send(formData)
-        req.addEventListener('load', () => onLoad(req), true)
     }
 
     function load(req) {
@@ -23,14 +31,7 @@
         if (_offcanvas) {
             bootstrap.Offcanvas.getInstance(_offcanvas).hide()
         }
-        _modal = _offcanvas = null
-        const body = req.response.documentElement.getElementsByTagName('body')[0]
-        if (body) {
-            document.body.innerHTML = body.innerHTML
-            document.dispatchEvent(new Event("DOMContentLoaded"))
-        } else {
-            alert("Error occurred\nHTTP Status Code is " + req.status)
-        }
+        showBody(req)
     }
 
     function show(response) {
@@ -70,9 +71,33 @@
                 _offcanvas = document.body.appendChild(elem)
                 new bootstrap.Offcanvas(_offcanvas)
             }
-            window.setTimeout(() => bootstrap.Offcanvas.getInstance(_offcanvas).show(), 10)
+            window.setTimeout(() => bootstrap.Offcanvas.getInstance(_offcanvas).show(), 50)
             prepare(_offcanvas)
             return true
+        }
+    }
+
+    function showBody(req) {
+        const body = req.response.documentElement.getElementsByTagName('body')[0]
+        if (body) {
+            if (req.responseURL != location.href) {
+                history.replaceState(null, null, req.responseURL)
+            }
+            if (_modal) {
+                body.appendChild(_modal)
+            }
+            if (_offcanvas) {
+                body.appendChild(_offcanvas)
+            }
+            while (document.body.children.length > 0) {
+                document.body.children[0].remove()
+            }
+            while (body.children.length > 0) {
+                document.body.appendChild(body.children[0])
+            }
+            document.dispatchEvent(new Event("DOMContentLoaded"))
+        } else {
+            alert(req.statusText)
         }
     }
 
