@@ -9,7 +9,7 @@
                 if (req.status == 0 || (200 <= req.status && req.status < 400)) {
                     onLoad(req)
                 } else {
-                    showBody(req)
+                    showError(req)
                 }
             }
         })
@@ -20,10 +20,8 @@
     }
 
     function load(req) {
-        if (req.status == 200) {
-            if (show(req.response)) {
-                return
-            }
+        if (show(req.response)) {
+            return
         }
         if (_modal) {
             bootstrap.Modal.getInstance(_modal).hide()
@@ -80,22 +78,29 @@
     function showBody(req) {
         const body = req.response.documentElement.getElementsByTagName('body')[0]
         if (body) {
-            if (req.responseURL != location.href) {
-                history.replaceState(null, null, req.responseURL)
+            const head = req.response.documentElement.getElementsByTagName('head')[0]
+            if (head) {
+                document.head.innerHTML = head.innerHTML
             }
-            if (_modal) {
-                body.appendChild(_modal)
-            }
-            if (_offcanvas) {
-                body.appendChild(_offcanvas)
-            }
-            while (document.body.children.length > 0) {
-                document.body.children[0].remove()
+            let i = 0
+            while (document.body.children.length > i) {
+                const elem = document.body.children[i]
+                if (elem == _modal || elem == _offcanvas) {
+                    i++
+                } else {
+                    elem.remove()
+                }
             }
             while (body.children.length > 0) {
                 document.body.appendChild(body.children[0])
             }
             document.dispatchEvent(new Event("DOMContentLoaded"))
+        }
+    }
+
+    function showError(req) {
+        if (req.response.documentElement.innerHTML != '') {
+            showBody(req)
         } else {
             alert(req.statusText)
         }
