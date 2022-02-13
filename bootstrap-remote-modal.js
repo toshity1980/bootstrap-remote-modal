@@ -9,7 +9,7 @@
                 if (req.status == 0 || (200 <= req.status && req.status < 400)) {
                     onLoad(req)
                 } else {
-                    showError(req)
+                    showBody(req)
                 }
             }
         })
@@ -78,9 +78,11 @@
     function showBody(req) {
         const body = req.response.documentElement.getElementsByTagName('body')[0]
         if (body) {
-            const head = req.response.documentElement.getElementsByTagName('head')[0]
-            if (head) {
-                document.head.innerHTML = head.innerHTML
+            if (req.response.responseURL != location.href) {
+                const head = req.response.documentElement.getElementsByTagName('head')[0]
+                if (head) {
+                    document.head.innerHTML = head.innerHTML
+                }
             }
             let i = 0
             while (document.body.children.length > i) {
@@ -95,12 +97,6 @@
                 document.body.appendChild(body.children[0])
             }
             document.dispatchEvent(new Event("DOMContentLoaded"))
-        }
-    }
-
-    function showError(req) {
-        if (req.response.documentElement.innerHTML != '') {
-            showBody(req)
         } else {
             alert(req.statusText)
         }
