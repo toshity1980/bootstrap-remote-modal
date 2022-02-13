@@ -2,55 +2,28 @@
     let _modal = null
     let _offcanvas = null
 
-    function request(url, method, formData, onLoad) {
-        const req = new XMLHttpRequest()
-        req.addEventListener('readystatechange', () => {
-            if (req.readyState === XMLHttpRequest.DONE) {
-                if (req.status == 0 || (200 <= req.status && req.status < 400)) {
-                    onLoad(req)
-                } else {
-                    showBody(req)
-                }
-            }
+    function request(url, method, formData) {
+        const xhr = new XMLHttpRequest()
+        xhr.addEventListener('loadend', () => {
+            render(xhr)
         })
-        req.responseType = 'document'
-        req.open(method, url)
-        req.setRequestHeader('X-Referer', location.href)
-        req.send(formData)
+        xhr.responseType = 'document'
+        xhr.open(method, url)
+        xhr.setRequestHeader('X-Referer', location.href)
+        xhr.send(formData)
     }
 
-    function load(req) {
-        if (show(req.response)) {
-            return
-        }
-        if (_modal) {
-            bootstrap.Modal.getInstance(_modal).hide()
-        }
-        if (_offcanvas) {
-            bootstrap.Offcanvas.getInstance(_offcanvas).hide()
-        }
-        showBody(req)
-    }
-
-    function show(response) {
-        return showModal(response) || showOffcanvas(response)
+    function render(xhr) {
+        return showModal(xhr.response) || showOffcanvas(xhr.response) || replacePage(xhr.response) || alert(xhr.statusText)
     }
 
     function showModal(response) {
-        let modalElem = response.getElementsByClassName('modal')[0]
-        if (!modalElem) {
-            const elem = response.getElementsByClassName('modal-dialog')[0]
-            if (elem) {
-                modalElem = document.createElement('div')
-                modalElem.classList.add('modal', 'fade')
-                modalElem.appendChild(elem)
-            }
-        }
-        if (modalElem) {
+        const modalElement = getModalContent(response)
+        if (modalElement) {
             if (_modal) {
-                _modal.innerHTML = modalElem.innerHTML
+                _modal.innerHTML = modalElement.innerHTML
             } else {
-                _modal = document.body.appendChild(modalElem)
+                _modal = document.body.appendChild(modalElement)
                 new bootstrap.Modal(_modal)
             }
             bootstrap.Modal.getInstance(_modal).show()
@@ -59,31 +32,59 @@
         }
     }
 
+    function getModalContent(response) {
+        const modal = response.getElementsByClassName('modal')[0]
+        if (modal) {
+            return modal
+        }
+        const dialog = response.getElementsByClassName('modal-dialog')[0]
+        if (dialog) {
+            const modal = document.createElement('div')
+            modal.classList.add('modal', 'fade')
+            modal.appendChild(dialog)
+            return modal
+        }
+    }
+
     function showOffcanvas(response) {
-        const elem = response.getElementsByClassName('offcanvas')[0]
-        if (elem) {
+        const offcanvas = response.getElementsByClassName('offcanvas')[0]
+        if (offcanvas) {
             if (_offcanvas) {
-                _offcanvas.innerHTML = elem.innerHTML
+                _offcanvas.innerHTML = offcanvas.innerHTML
             } else {
-                elem.classList.remove('show')
-                _offcanvas = document.body.appendChild(elem)
+                offcanvas.classList.remove('show')
+                _offcanvas = document.body.appendChild(offcanvas)
                 new bootstrap.Offcanvas(_offcanvas)
             }
-            window.setTimeout(() => bootstrap.Offcanvas.getInstance(_offcanvas).show(), 50)
+            window.setTimeout(() => bootstrap.Offcanvas.getInstance(_offcanvas).show(), 100)
             prepare(_offcanvas)
             return true
         }
     }
 
-    function showBody(req) {
-        const body = req.response.documentElement.getElementsByTagName('body')[0]
+    function replacePage(response) {
+        const head = response.documentElement.getElementsByTagName('head')[0]
+        if (replaceBody(response)) {
+            hideModalAndOffcanvas()
+            updateHead(response)
+            rerunScript()
+            document.dispatchEvent(new Event("DOMContentLoaded"))
+            return true
+        }
+    }
+
+    function hideModalAndOffcanvas() {
+        if (_modal) {
+            bootstrap.Modal.getInstance(_modal).hide()
+        }
+        if (_offcanvas) {
+            bootstrap.Offcanvas.getInstance(_offcanvas).hide()
+        }
+    }
+
+    function replaceBody(response) {
+        const body = response.documentElement.getElementsByTagName('body')[0]
         if (body) {
-            if (req.responseURL != location.href) {
-                const head = req.response.documentElement.getElementsByTagName('head')[0]
-                if (head) {
-                    document.head.innerHTML = head.innerHTML
-                }
-            }
             let i = 0
             while (document.body.children.length > i) {
                 const elem = document.body.children[i]
@@ -96,22 +97,41 @@
             while (body.children.length > 0) {
                 document.body.appendChild(body.children[0])
             }
-            document.dispatchEvent(new Event("DOMContentLoaded"))
-        } else {
-            alert(req.statusText)
+            return true
         }
     }
 
-    function prepare(contentElem) {
-        for (const elem of contentElem.getElementsByTagName('form')) {
-            elem.addEventListener('submit', (event) => {
-                request(elem.action, elem.method, new FormData(elem), load)
+    function updateHead(response) {
+        const head = response.documentElement.getElementsByTagName('head')[0]
+        if (head) {
+            if (document.head.title != head.title) {
+                document.head.title = head.title
+            }
+            if (document.head.innerHTML != head.innerHTML) {
+                document.head.innerHTML = head.innerHTML
+            }
+            return true
+        }
+    }
+
+    function rerunScript() {
+        document.querySelectorAll('script').forEach(elem => {
+            const script = document.createElement('script')
+            script.textContent = elem.textContent
+            elem.replaceWith(script)
+        })
+    }
+
+    function prepare(contentElement) {
+        for (const element of contentElement.getElementsByTagName('form')) {
+            element.addEventListener('submit', (event) => {
+                request(element.action, element.method, new FormData(element))
                 event.preventDefault()
             })
         }
-        for (const elem of contentElem.getElementsByTagName('a')) {
-            elem.addEventListener('click', (event) => {
-                request(elem.href, 'get', null, load)
+        for (const element of contentElement.getElementsByTagName('a')) {
+            element.addEventListener('click', (event) => {
+                request(element.href, 'get', null)
                 event.preventDefault()
             })
         }
@@ -120,7 +140,7 @@
     function remoteModal(event) {
         const uri = event.target.href ? event.target.href : event.target.dataset.bsTarget
         if (event.target.dataset.bsToggle == 'remote-modal' && uri) {
-            request(uri, 'get', null, load)
+            request(uri, 'get', null)
             event.preventDefault()
         }
     }
