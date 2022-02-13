@@ -78,7 +78,7 @@
     function showBody(req) {
         const body = req.response.documentElement.getElementsByTagName('body')[0]
         if (body) {
-            if (req.response.responseURL != location.href) {
+            if (req.responseURL != location.href) {
                 const head = req.response.documentElement.getElementsByTagName('head')[0]
                 if (head) {
                     document.head.innerHTML = head.innerHTML
