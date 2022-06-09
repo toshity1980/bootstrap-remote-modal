@@ -16,7 +16,6 @@
     function render(xhr) {
         return showModal(xhr.response) ||
             showOffcanvas(xhr.response) ||
-            reloadPage(xhr.responseText) ||
             replacePage(xhr.response) ||
             alert(xhr.statusText)
     }
@@ -62,13 +61,6 @@
             }
             window.setTimeout(() => bootstrap.Offcanvas.getInstance(_offcanvas).show(), 100)
             prepare(_offcanvas)
-            return true
-        }
-    }
-
-    function reloadPage(responseText) {
-        if (responseText === '') {
-            location.reload()
             return true
         }
     }
