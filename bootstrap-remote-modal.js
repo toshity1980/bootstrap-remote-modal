@@ -14,7 +14,11 @@
     }
 
     function render(xhr) {
-        return showModal(xhr.response) || showOffcanvas(xhr.response) || replacePage(xhr.response) || alert(xhr.statusText)
+        return showModal(xhr.response) ||
+            showOffcanvas(xhr.response) ||
+            reloadPage(xhr.responseText) ||
+            replacePage(xhr.response) ||
+            alert(xhr.statusText)
     }
 
     function showModal(response) {
@@ -62,8 +66,14 @@
         }
     }
 
+    function reloadPage(responseText) {
+        if (responseText === '') {
+            location.reload()
+            return true
+        }
+    }
+
     function replacePage(response) {
-        const head = response.documentElement.getElementsByTagName('head')[0]
         if (replaceBody(response)) {
             hideModalAndOffcanvas()
             updateHead(response)
