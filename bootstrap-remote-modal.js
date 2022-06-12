@@ -1,23 +1,45 @@
 (function (bootstrap) {
     let _modal = null
     let _offcanvas = null
+    let _onClosed = null
 
     function request(url, method, formData) {
         const xhr = new XMLHttpRequest()
         xhr.addEventListener('loadend', () => {
             render(xhr)
         })
-        xhr.responseType = 'document'
+        xhr.responseType = 'text'
         xhr.open(method, url)
         xhr.setRequestHeader('X-Referer', location.href)
         xhr.send(formData)
     }
 
     function render(xhr) {
-        return showModal(xhr.response) ||
-            showOffcanvas(xhr.response) ||
-            replacePage(xhr.response) ||
+        let contentType = xhr.getResponseHeader('Content-Type')
+        console.log(contentType)
+        if (contentType.indexOf('text/html;') == 0) {
+            let domParser = new DOMParser()
+            let response = domParser.parseFromString(xhr.response, 'text/html')
+            return onClosed(response) ||
+                showModal(response) ||
+                showOffcanvas(response) ||
+                replacePage(response) ||
+                alert(xhr.statusText)
+        } else if (contentType.indexOf('application/json;') == 0) {
+            let response = JSON.parse(xhr.response)
+            return onClosed(response) ||
+                alert(xhr.statusText)
+        } else {
             alert(xhr.statusText)
+        }
+    }
+
+    function onClosed(response) {
+        if (_onClosed) {
+            _onClosed(response)
+            _onClosed = null
+            return true
+        }
     }
 
     function showModal(response) {
@@ -144,6 +166,7 @@
     function remoteModal(event) {
         const uri = event.target.href ? event.target.href : event.target.dataset.bsHref
         if (event.target.dataset.bsToggle == 'remote-modal' && uri) {
+            _onClosed = null
             request(uri, 'get', null)
             event.preventDefault()
         }
@@ -153,4 +176,9 @@
         document.removeEventListener('click', remoteModal)
         document.addEventListener('click', remoteModal)
     })
+
+    window.remoteModal = function (href, onClosed) {
+        _onClosed = onClosed
+        request(href, 'get', null)
+    }
 })(bootstrap)
