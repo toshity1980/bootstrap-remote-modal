@@ -31,6 +31,7 @@
             }
             bootstrap.Modal.getInstance(_modal).show()
             prepare(_modal)
+            _modal.dispatchEvent(new CustomEvent('bsRemoteModalLoaded', {bubbles: true}))
             return true
         }
     }
@@ -61,6 +62,7 @@
             }
             window.setTimeout(() => bootstrap.Offcanvas.getInstance(_offcanvas).show(), 100)
             prepare(_offcanvas)
+            _offcanvas.dispatchEvent(new CustomEvent('bsRemoteModalLoaded', {bubbles: true}))
             return true
         }
     }
