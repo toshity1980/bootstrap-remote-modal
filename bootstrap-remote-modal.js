@@ -50,9 +50,10 @@
             } else {
                 _modal = document.body.appendChild(modalElement)
                 new bootstrap.Modal(_modal)
+                prepareEventListener(_modal, 'modal', () => _modal = undefined)
             }
             bootstrap.Modal.getInstance(_modal).show()
-            prepare(_modal)
+            prepareContent(_modal)
             _modal.dispatchEvent(new CustomEvent('bsRemoteModalLoaded', {bubbles: true}))
             return true
         }
@@ -81,9 +82,10 @@
                 offcanvas.classList.remove('show')
                 _offcanvas = document.body.appendChild(offcanvas)
                 new bootstrap.Offcanvas(_offcanvas)
+                prepareEventListener(_offcanvas, 'offcanvas', () => _offcanvas = undefined)
             }
             window.setTimeout(() => bootstrap.Offcanvas.getInstance(_offcanvas).show(), 100)
-            prepare(_offcanvas)
+            prepareContent(_offcanvas)
             _offcanvas.dispatchEvent(new CustomEvent('bsRemoteModalLoaded', {bubbles: true}))
             return true
         }
@@ -148,7 +150,22 @@
         })
     }
 
-    function prepare(contentElement) {
+    function prepareEventListener(elem, type, onHidden) {
+        elem.addEventListener('shown.bs.' + type, () => {
+            let input = elem.querySelector('input:not([type=hidden]),select,textarea')
+            if (input) {
+                input.focus()
+            }
+        })
+        elem.addEventListener('hidden.bs.' + type, () => {
+            document.body.removeChild(elem)
+            if (onHidden) {
+                onHidden()
+            }
+        })
+    }
+
+    function prepareContent(contentElement) {
         for (const element of contentElement.getElementsByTagName('form')) {
             element.addEventListener('submit', (event) => {
                 request(element.action, element.method, new FormData(element))
