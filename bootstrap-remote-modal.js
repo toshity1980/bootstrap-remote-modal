@@ -16,7 +16,6 @@
 
     function render(xhr) {
         let contentType = xhr.getResponseHeader('Content-Type')
-        console.log(contentType)
         if (contentType.indexOf('text/html;') == 0) {
             let domParser = new DOMParser()
             let response = domParser.parseFromString(xhr.response, 'text/html')
