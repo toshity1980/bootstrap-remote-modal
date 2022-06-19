@@ -53,7 +53,7 @@
             }
             bootstrap.Modal.getInstance(_modal).show()
             prepareContent(_modal)
-            _modal.dispatchEvent(new CustomEvent('bsRemoteModalLoaded', {bubbles: true}))
+            _modal.dispatchEvent(new CustomEvent('loaded.bs.modal', {bubbles: true}))
             return true
         }
     }
@@ -85,7 +85,7 @@
             }
             window.setTimeout(() => bootstrap.Offcanvas.getInstance(_offcanvas).show(), 100)
             prepareContent(_offcanvas)
-            _offcanvas.dispatchEvent(new CustomEvent('bsRemoteModalLoaded', {bubbles: true}))
+            _offcanvas.dispatchEvent(new CustomEvent('loaded.bs.offcanvas', {bubbles: true}))
             return true
         }
     }
@@ -180,8 +180,8 @@
     }
 
     function remoteModal(event) {
-        const uri = event.target.href ? event.target.href : event.target.dataset.bsHref
-        if (event.target.dataset.bsToggle == 'remote-modal' && uri) {
+        const uri = event.target.href ? event.target.href : event.target.dataset.href
+        if (event.target.dataset.toggle == 'remote-modal' && uri) {
             _onClosed = null
             request(uri, 'get', null)
             event.preventDefault()
